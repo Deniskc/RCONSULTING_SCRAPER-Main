@@ -72,11 +72,22 @@ class AvitoScraper(Scraper):
                     
                     if settings.TESTING and success_count >= 1200:
                         try:
-                            self._AvitoWriter().dump(items=scraped_items, table_filename='test.xlsx')
+                            self._AvitoWriter().dump(items=scraped_items, table_filename='test_1.xlsx')
 
                         except Exception as e:
                             self.logger.log_error(f"Ошибка при сохранении Excel: {str(e)}")
                         return scraped_items
+                    
+                    if settings.TESTING and success_count >= 1400:
+                        try:
+                            self._AvitoWriter().dump(items=scraped_items, table_filename='test_2.xlsx')
+
+                        except Exception as e:
+                            self.logger.log_error(f"Ошибка при сохранении Excel: {str(e)}")
+                        return scraped_items
+
+
+
                         
                     item = self.scrape_item(l)
                     if item:
@@ -117,7 +128,14 @@ class AvitoScraper(Scraper):
         """
         
         self.driver.get(page_link)
-        
+        elements_count = None
+        try:
+            elements_count = self.driver.find_element(By.CSS_SELECTOR, 'span[data-marker="page-title/count"]')
+            print(f'Количество элементов {elements_count}')
+        except Exception as e:
+            print('Ошибка поиска количества элементов',e)
+
+
         link_wrappers = self.driver.find_elements(by=By.XPATH, value=settings.AVITO_LINK_ITEMS_XPATH)
         links: List[str] = [link.get_attribute("href") for link in link_wrappers]
 
@@ -248,15 +266,30 @@ class AvitoScraper(Scraper):
 
     def save_tel(self, id: int, timestamp: str, url: str):
         try:
-            self.driver.find_element(by=By.XPATH, value=settings.AVITO_BTN_XPATH).click()
-            tel = self.__save_image__(id, "tel")
-            self._Timestamper().timestamp(picture_path=tel, timestamp=timestamp, url=url)
-        except:
             WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, settings.AVITO_BTN_XPATH)))
-            self.driver.find_element(by=By.XPATH, value=settings.AVITO_BTN_XPATH).click()
-            tel = self.__save_image__(id, "tel")
-            self._Timestamper().timestamp(picture_path=tel, timestamp=timestamp, url=url)
+                EC.invisibility_of_element_located((By.CSS_SELECTOR, 'div[role="tooltip"]'))
+            )
+            button = self.driver.find_element(by=By.XPATH, value=settings.AVITO_BTN_XPATH).click()
+            
+        except Exception as e:
+            print(e)
+            try:
+                button = WebDriverWait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, settings.AVITO_BTN_XPATH))
+                )
+                # Скроллим к элементу (если он вне зоны видимости)
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+                
+                # Кликаем (с небольшим смещением, если нужно)
+                ActionChains(self.driver).move_to_element(button).click().perform()
+            except Exception as e1:
+                print(e1)
+                button = self.driver.find_element(By.CSS_SELECTOR, 'button[data-marker="item-phone-button/card"]')
+                self.driver.execute_script("arguments[0].click();", button)
+
+        tel = self.__save_image__(id, "tel")
+        self._Timestamper().timestamp(picture_path=tel, timestamp=timestamp, url=url)
+
     
     def save_pictures(self, prefix: Union[str, int]) -> List[str]:
         paths: List[str] = []

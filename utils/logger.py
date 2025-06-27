@@ -36,6 +36,6 @@ class TXTLogger():
             with open(Utils.get_path(settings.ERROR), 'a+', encoding="utf-8") as f:
                 f.write(content + "\n")
         except Exception as e:
-            print(e)
+            print('Лог не готов: ', e)
 
         print(error)
