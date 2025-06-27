@@ -1,0 +1,10 @@
+{
+    "EXCEL_FILE_NAME": "nedvizhka",
+    "URL": "https://www.avito.ru/perm/kommercheskaya_nedvizhimost",
+    "ERROR": "Error.txt",
+    "DIRECTORY": "C:\\Users\\user\\Desktop\\RCONSULTING_SCRAPER-Main",
+    "VERSION": "1.1.2",
+    "MIN": 5,
+    "MAX": 17
+}
+
