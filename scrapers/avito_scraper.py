@@ -31,18 +31,10 @@ class AvitoScraper(Scraper):
             
             self.driver.get(url=self.url)
             
-            try:
-                for page_url in self.get_page_urls():
-                    scraped_items.extend(self.scrape_page(page_url))
-            except Exception as e:
-                print(e)
-                try:
-
-                    time.sleep(5)
-                    for page_url in self.get_page_urls():
-                        scraped_items.extend(self.scrape_page(page_url))
-                except Exception as e1:
-                    print(e1)
+            
+            for page_url in self.get_page_urls():
+                scraped_items.extend(list(self.scrape_page(page_url)))
+            
 
             
             links: List[Dict[str, str]] = self.process_links(links=self.logger.get_errors())
@@ -51,11 +43,16 @@ class AvitoScraper(Scraper):
             self._AvitoWriter().dump(items=scraped_items)
         except Exception as e:
             print(e)
-            try:
-                time.sleep(5)
-                self._AvitoWriter().dump(items=scraped_items)
-            except Exception as e1:
-                print(e1)
+            self.logger.log_error(f"Ошибка process: {str(e)}")
+            self._AvitoWriter().dump(items=scraped_items)
+
+
+        except KeyboardInterrupt:
+            print("\nПолучен сигнал прерывания! Сохраняем данные...")
+        finally:
+            print(f"Всего собрано: {len(scraped_items)} элементов")
+            self._AvitoWriter().dump(items=scraped_items)
+            self.driver.quit()  # Важно закрыть драйвер
 
     
     def process_links(self, links: List[str]) -> List[Dict[str, str]]:
@@ -63,7 +60,7 @@ class AvitoScraper(Scraper):
         """
         
         if settings.TESTING == True:
-            scraped_items = []
+            scraped_items: List[Dict[str, str]] = list()
             success_count = 0  # Счетчик успешных записей
     
             for l in links:
@@ -76,7 +73,7 @@ class AvitoScraper(Scraper):
 
                         except Exception as e:
                             self.logger.log_error(f"Ошибка при сохранении Excel: {str(e)}")
-                        return scraped_items
+                        # return scraped_items
                     
                     if settings.TESTING and success_count >= 1400:
                         try:
@@ -84,7 +81,8 @@ class AvitoScraper(Scraper):
 
                         except Exception as e:
                             self.logger.log_error(f"Ошибка при сохранении Excel: {str(e)}")
-                        return scraped_items
+                    
+                    # return scraped_items
 
 
 
@@ -109,7 +107,7 @@ class AvitoScraper(Scraper):
                 except:
                     self.logger.log_error(l)
 
-        return scraped_items
+        return scraped_items    
     
     def get_page_urls(self) -> Iterator[str]:
         """Возвращает ссылки на страницы со списком объявлений
@@ -119,9 +117,15 @@ class AvitoScraper(Scraper):
             last_page_index: int = self.get_last_page_index()
             for p in range(1, last_page_index + 1):
                 yield self.__get_page_link__(marker=settings.AVITO_PAGE_MARKER, no=p)
-        except:
-            self.logger.log_error(self.url)
+        except GeneratorExit:
+            print("Генератор страниц завершен")
+            raise
+        except Exception as e:
+            self.logger.log_error(f"Ошибка в генераторе страниц: {str(e)}")
             yield self.url
+        finally:
+            print("Завершение генерации URL")
+
         
     def scrape_page(self, page_link: str) -> List[Dict[str, str]]:
         """Парсит страницу с объявлениями
@@ -129,11 +133,14 @@ class AvitoScraper(Scraper):
         
         self.driver.get(page_link)
         elements_count = None
+        time.sleep(random.uniform(1, 5))
         try:
             elements_count = self.driver.find_element(By.CSS_SELECTOR, 'span[data-marker="page-title/count"]')
-            print(f'Количество элементов {elements_count}')
+            print(f'Количество элементов {elements_count.text}')
         except Exception as e:
             print('Ошибка поиска количества элементов',e)
+            self.logger.log_error(f"Ошибка в scrape_page: {str(e)}")
+
 
 
         link_wrappers = self.driver.find_elements(by=By.XPATH, value=settings.AVITO_LINK_ITEMS_XPATH)

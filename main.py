@@ -2,6 +2,7 @@ from settings.settings import settings
 from utils.utils import Utils
 from scrapers.scraper import Scraper
 from scrapers.builders.func.yield_scraper import yield_scraper
+# from scrapers.avito_scraper import _AvitoWriter
 
 
 from selenium.webdriver.remote.remote_connection import LOGGER
@@ -29,6 +30,8 @@ def main():
         scraper.process()
         print("Запуск процесса парсинга...")
         
+        # _AvitoWriter().dump(items=scraped_items)
+
         scraper.driver.quit()
         print("Завершение работы...")
         print("Готово! Проверьте папку:", settings.DIRECTORY)
