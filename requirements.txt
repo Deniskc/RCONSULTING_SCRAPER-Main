@@ -5,3 +5,6 @@ pillow
 openpyxl
 git+https://github.com/SergeyPirogov/webdriver_manager@master
 pathlib
+tenacity==9.1.2
+fake_useragent==2.2.0
+psutil==7.0.0

@@ -16,8 +16,11 @@ class driver_builder:
         Returns:
             webdriver.Chrome: Драйвер для Хрома
         """
+
         
         options = webdriver.ChromeOptions()
+        
+        options.binary_location = '/usr/bin/google-chrome' 
         
         chrome_prefs = {
             "download.prompt_for_download": False,
@@ -44,6 +47,7 @@ class driver_builder:
 
         # disable shared memory usage
         options.add_argument('--disable-dev-shm-usage')
+        # options.page_load_strategy = 'eager'
         
         # service = ChromeService(executable_path=ChromeDriverManager().install())
         service = ChromeService()

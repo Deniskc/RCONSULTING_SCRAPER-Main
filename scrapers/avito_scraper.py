@@ -6,6 +6,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from selenium.common.exceptions import WebDriverException
 
 
 from selenium.webdriver.common.action_chains import ActionChains
@@ -25,6 +27,11 @@ from utils.utils import Utils
 
 class AvitoScraper(Scraper):
     
+    # def __init__(self):
+    #     super().__init__()
+    #     self.driver = RobustWebDriver()
+    #     self._request_timeout = 60
+
     def process(self):
         try:
             scraped_items: List[Dict[str, str]] = list()
@@ -126,7 +133,9 @@ class AvitoScraper(Scraper):
         finally:
             print("Завершение генерации URL")
 
-        
+    @retry(stop=stop_after_attempt(3),
+          wait=wait_exponential(multiplier=1, min=2, max=10),
+          retry=retry_if_exception_type((WebDriverException, TimeoutError)))    
     def scrape_page(self, page_link: str) -> List[Dict[str, str]]:
         """Парсит страницу с объявлениями
         """
