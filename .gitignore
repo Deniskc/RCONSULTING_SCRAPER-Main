@@ -1,3 +1,6 @@
-/2025_06_26_15_06_18
 /parser.log
-/venv
+/venv/
+20*
+.vscode/
+/__pycache__/
+

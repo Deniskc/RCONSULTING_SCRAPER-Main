@@ -26,7 +26,12 @@ class driver_builder:
             "savefile.default_directory": settings.DIRECTORY,
         }
         
-       
+        from fake_useragent import UserAgent
+
+        # В настройках драйвера:
+        ua = UserAgent()
+        options.add_argument(f"user-agent={ua.random}")
+
         options.add_argument("--headless=new")
         
         options.add_experimental_option("prefs", chrome_prefs)

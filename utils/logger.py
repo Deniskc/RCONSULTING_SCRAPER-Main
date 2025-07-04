@@ -26,7 +26,7 @@ class TXTLogger():
         return links
     
     @staticmethod
-    def log_error(content: str, error: Exception = None):
+    def log_error(content: str = None, error: Exception = None):
         """Сохраняет логи в файл, указанную в настройках
 
         Args:
